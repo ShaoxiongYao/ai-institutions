@@ -10,10 +10,9 @@ The project does not assume that any institution is better. Every result is a co
 
 Four institutions (closed or open research × private or public funding and ownership) run for 25 periods with the same budget and the same random shocks. Flip the switches to see how 100 people fare, how four firms "climb the mountain", where the money flows, and 50 possible histories. Other switches change the assumptions: labor-income replacement, pricing, whether private firms choose their own R&D, frictions in open-research spillovers, and a public lab next to private firms.
 
-- English: [results/dynamics/en/index.html](results/dynamics/en/index.html)
-- Chinese: [results/dynamics/index.html](results/dynamics/index.html)
+**Open it online:** [English](https://shaoxiongyao.github.io/ai-institutions/results/dynamics/en/) · [中文](https://shaoxiongyao.github.io/ai-institutions/results/dynamics/)
 
-Each page is self-contained (about 10 MB, data included): download it and open it in a browser.
+Each page is self-contained (about 10 MB, data included), so you can also download [the English file](results/dynamics/en/index.html) or [the Chinese file](results/dynamics/index.html) and open it in a browser offline.
 
 ## Findings in brief
 

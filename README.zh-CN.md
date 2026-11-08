@@ -25,7 +25,8 @@
 
 开源/闭源 × 私人/公共，相同预算、相同随机冲击。拨动开关，看 100 个人的得失、厂商“爬山”、资金流向和 50 条可能的历史。其他开关切换假设：劳动收入替代、定价方式、私人研发投入方式，以及开源外溢是否有摩擦（无摩擦时开源结果是上限，见 F10）。
 
-- 直接在浏览器打开：[results/dynamics/index.html](results/dynamics/index.html)（完整独立页面，也可用于 GitHub Pages）
+- **在线打开**：[中文](https://shaoxiongyao.github.io/ai-institutions/results/dynamics/) · [English](https://shaoxiongyao.github.io/ai-institutions/results/dynamics/en/)
+- 离线打开：下载 [results/dynamics/index.html](results/dynamics/index.html)（完整独立页面，约 10MB），直接用浏览器打开
 - `results/dynamics/explainer.html`：同样内容的页面片段，即发布到 Claude Artifact 的文件
 - 英文版：[results/dynamics/en/index.html](results/dynamics/en/index.html)（English version；片段为 `results/dynamics/en/explainer.html`）
 - 源文件：[viz/dynamics.html](viz/dynamics.html)（中文）、[viz/dynamics.en.html](viz/dynamics.en.html)（英文，两者互为翻译，改动时需同步）；数据：`results/dynamics/trajectories.json`

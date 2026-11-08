@@ -1,0 +1,346 @@
+{
+  "experiment": "distribution",
+  "run_info": {
+    "seed": 1,
+    "n_draws": 50000,
+    "git_commit": "25b79ba6e363d812564f736eb1e2546cd470e48d",
+    "git_dirty": false,
+    "timestamp": "2026-11-04T20:38:39+00:00"
+  },
+  "config": {
+    "baseline": {
+      "n": [
+        0.1,
+        0.6,
+        0.3
+      ],
+      "y0": [
+        4.0,
+        1.0,
+        2.0
+      ],
+      "a": [
+        0.2,
+        0.4,
+        0.4
+      ],
+      "omega": [
+        [
+          1.0,
+          1.0,
+          1.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0
+        ]
+      ],
+      "beta": [
+        [
+          1.0,
+          1.0,
+          1.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0
+        ]
+      ],
+      "d": [
+        0.0,
+        0.8,
+        0.2
+      ],
+      "delta": [
+        0.0,
+        0.8,
+        0.2
+      ],
+      "r": [
+        0.15,
+        0.1,
+        0.05
+      ],
+      "q0": [
+        0.2,
+        0.15,
+        0.1
+      ],
+      "h": [
+        0.1,
+        0.0,
+        0.0
+      ],
+      "open": [
+        false,
+        false,
+        false
+      ],
+      "A": 1.0,
+      "alpha": 0.6,
+      "startup_cost": 0.0,
+      "sigma": 0.8,
+      "rho": 0.3,
+      "H0": 0.0,
+      "kappa": 3.0,
+      "theta": 1.2,
+      "gamma": 1.0,
+      "chi": 0.1,
+      "tau": 0.5,
+      "eta": 0.0
+    },
+    "ownership": {
+      "concentrated": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "broad": [
+        0.1,
+        0.6,
+        0.3
+      ]
+    },
+    "tax_shares": [
+      0.25,
+      0.37499999999999994,
+      0.37499999999999994
+    ],
+    "etas": [
+      0.0,
+      0.3
+    ],
+    "crra_floor": 0.05,
+    "common_random_numbers": true
+  },
+  "rows": [
+    {
+      "ownership": "concentrated",
+      "financing": "private",
+      "eta": 0.0,
+      "W_linear": 1.8223026065822816,
+      "W_linear_se": 0.001247525964416554,
+      "W_log": 0.46435737819964473,
+      "W_log_se": 0.0003773939686992817,
+      "floor_hit_share": 0.0,
+      "W_crra2": -0.6922704767034928,
+      "W_crra2_se": 0.0001841872977677278,
+      "total_resources": 1.8223026065822816,
+      "loser_share": 0.051311999999999997,
+      "loser_share_se": 0.00022353203898199702,
+      "y_mean_investors": 4.482017377215217,
+      "y_p05_investors": 2.827076204969477,
+      "y_sd_investors": 1.8597019067542653,
+      "loss_prob_investors": 0.51312,
+      "y_mean_workers": 1.1160672459071674,
+      "y_p05_workers": 1.060902540165649,
+      "y_sd_workers": 0.06199006355847552,
+      "loss_prob_workers": 0.0,
+      "y_mean_others": 2.348201737721533,
+      "y_p05_others": 2.1827076204969473,
+      "y_sd_others": 0.18597019067542656,
+      "loss_prob_others": 0.0
+    },
+    {
+      "ownership": "concentrated",
+      "financing": "public",
+      "eta": 0.0,
+      "W_linear": 1.8223026065822814,
+      "W_linear_se": 0.001247525964416554,
+      "W_log": 0.3449641252056333,
+      "W_log_se": 0.0003772093981124278,
+      "floor_hit_share": 0.0,
+      "W_crra2": -0.8173636218773923,
+      "W_crra2_se": 0.0002321242921339513,
+      "total_resources": 1.8223026065822814,
+      "loser_share": 0.7563960000000001,
+      "loser_share_se": 0.001206463814119054,
+      "y_mean_investors": 6.732017377215214,
+      "y_p05_investors": 5.077076204969477,
+      "y_sd_investors": 1.8597019067542653,
+      "loss_prob_investors": 0.0,
+      "y_mean_workers": 0.9285672459071697,
+      "y_p05_workers": 0.8734025401656492,
+      "y_sd_workers": 0.06199006355847552,
+      "loss_prob_workers": 0.90682,
+      "y_mean_others": 1.9732017377215278,
+      "y_p05_others": 1.8077076204969478,
+      "y_sd_others": 0.18597019067542656,
+      "loss_prob_others": 0.70768
+    },
+    {
+      "ownership": "broad",
+      "financing": "private",
+      "eta": 0.0,
+      "W_linear": 1.8223026065822814,
+      "W_linear_se": 0.001247525964416554,
+      "W_log": 0.45535305304382445,
+      "W_log_se": 0.0006493158690535495,
+      "floor_hit_share": 0.0,
+      "W_crra2": -0.7097672396808797,
+      "W_crra2_se": 0.00043289671444526087,
+      "total_resources": 1.8223026065822814,
+      "loser_share": 0.212652,
+      "loser_share_se": 0.0013100110154106374,
+      "y_mean_investors": 4.5705043443037505,
+      "y_p05_investors": 4.156769051242369,
+      "y_sd_investors": 0.4649254766885663,
+      "loss_prob_investors": 0.0,
+      "y_mean_workers": 1.1062353606751067,
+      "y_p05_workers": 0.9131588905797723,
+      "y_sd_workers": 0.21696522245466432,
+      "loss_prob_workers": 0.34806,
+      "y_mean_others": 2.3383698524894605,
+      "y_p05_others": 2.0349639709110705,
+      "y_sd_others": 0.3409453495716154,
+      "loss_prob_others": 0.01272
+    },
+    {
+      "ownership": "broad",
+      "financing": "public",
+      "eta": 0.0,
+      "W_linear": 1.8223026065822816,
+      "W_linear_se": 0.001247525964416554,
+      "W_log": 0.4945325839797569,
+      "W_log_se": 0.0006219016614097811,
+      "floor_hit_share": 0.0,
+      "W_crra2": -0.6630221041544972,
+      "W_crra2_se": 0.0003788533226923374,
+      "total_resources": 1.8223026065822816,
+      "loser_share": 0.094266,
+      "loser_share_se": 0.0006755764597372078,
+      "y_mean_investors": 4.120504344303829,
+      "y_p05_investors": 3.706769051242369,
+      "y_sd_investors": 0.4649254766885663,
+      "loss_prob_investors": 0.51312,
+      "y_mean_workers": 1.2187353606751086,
+      "y_p05_workers": 1.0256588905797723,
+      "y_sd_workers": 0.21696522245466432,
+      "loss_prob_workers": 0.00944,
+      "y_mean_others": 2.263369852489456,
+      "y_p05_others": 1.9599639709110708,
+      "y_sd_others": 0.3409453495716154,
+      "loss_prob_others": 0.1243
+    },
+    {
+      "ownership": "concentrated",
+      "financing": "private",
+      "eta": 0.3,
+      "W_linear": 1.8223026065822814,
+      "W_linear_se": 0.001247525964416554,
+      "W_log": 0.34053292137552954,
+      "W_log_se": 8.93762454459821e-05,
+      "floor_hit_share": 0.0,
+      "W_crra2": -0.8366929416392966,
+      "W_crra2_se": 0.0003355833336367664,
+      "total_resources": 1.8223026065822814,
+      "loser_share": 0.6106539999999999,
+      "loser_share_se": 0.00013797907973504128,
+      "y_mean_investors": 6.2230260658228405,
+      "y_p05_investors": 3.740614307454215,
+      "y_sd_investors": 2.7895528601313977,
+      "loss_prob_investors": 0.10654,
+      "y_mean_workers": 0.8839327540928252,
+      "y_p05_workers": 0.7707615332567257,
+      "y_sd_workers": 0.061990063558475514,
+      "loss_prob_workers": 1.0,
+      "y_mean_others": 2.232134491814335,
+      "y_p05_others": 2.121805080331298,
+      "y_sd_others": 0.12398012711695106,
+      "loss_prob_others": 0.0
+    },
+    {
+      "ownership": "concentrated",
+      "financing": "public",
+      "eta": 0.3,
+      "W_linear": 1.8223026065822814,
+      "W_linear_se": 0.001247525964416554,
+      "W_log": 0.1745786030700833,
+      "W_log_se": 0.000160071458323568,
+      "floor_hit_share": 0.00014399999999999998,
+      "W_crra2": -1.050067970206701,
+      "W_crra2_se": 0.0010420551464586886,
+      "total_resources": 1.8223026065822814,
+      "loser_share": 0.8720460000000001,
+      "loser_share_se": 0.00038999810211127046,
+      "y_mean_investors": 8.473026065822886,
+      "y_p05_investors": 5.990614307454214,
+      "y_sd_investors": 2.789552860131398,
+      "loss_prob_investors": 0.0,
+      "y_mean_workers": 0.6964327540928206,
+      "y_p05_workers": 0.5832615332567257,
+      "y_sd_workers": 0.061990063558475514,
+      "loss_prob_workers": 1.0,
+      "y_mean_others": 1.8571344918143393,
+      "y_p05_others": 1.7468050803312984,
+      "y_sd_others": 0.12398012711695106,
+      "loss_prob_others": 0.90682
+    },
+    {
+      "ownership": "broad",
+      "financing": "private",
+      "eta": 0.3,
+      "W_linear": 1.8223026065822816,
+      "W_linear_se": 0.001247525964416554,
+      "W_log": 0.4351744043287546,
+      "W_log_se": 0.0006271251751643571,
+      "floor_hit_share": 0.0,
+      "W_crra2": -0.7343166078882801,
+      "W_crra2_se": 0.0004234241042296614,
+      "total_resources": 1.8223026065822816,
+      "loser_share": 0.30846,
+      "loser_share_se": 0.0013450608728883,
+      "y_mean_investors": 4.74460521316455,
+      "y_p05_investors": 4.248122861490843,
+      "y_sd_investors": 0.5579105720262796,
+      "loss_prob_investors": 0.0,
+      "y_mean_workers": 1.0482017377215258,
+      "y_p05_workers": 0.8827076204969476,
+      "y_sd_workers": 0.18597019067542656,
+      "loss_prob_workers": 0.51312,
+      "y_mean_others": 2.3964034754430674,
+      "y_p05_others": 2.0654152409938953,
+      "y_sd_others": 0.3719403813508531,
+      "loss_prob_others": 0.00196
+    },
+    {
+      "ownership": "broad",
+      "financing": "public",
+      "eta": 0.3,
+      "W_linear": 1.8223026065822814,
+      "W_linear_se": 0.001247525964416554,
+      "W_log": 0.47782753332881794,
+      "W_log_se": 0.0006015397517675828,
+      "floor_hit_share": 0.0,
+      "W_crra2": -0.6820846978764512,
+      "W_crra2_se": 0.00036892628672529953,
+      "total_resources": 1.8223026065822814,
+      "loser_share": 0.08887600000000001,
+      "loser_share_se": 0.001078163429730217,
+      "y_mean_investors": 4.294605213164565,
+      "y_p05_investors": 3.798122861490843,
+      "y_sd_investors": 0.5579105720262797,
+      "loss_prob_investors": 0.31744,
+      "y_mean_workers": 1.1607017377215272,
+      "y_p05_workers": 0.9952076204969477,
+      "y_sd_workers": 0.18597019067542656,
+      "loss_prob_workers": 0.06348,
+      "y_mean_others": 2.3214034754430544,
+      "y_p05_others": 1.9904152409938953,
+      "y_sd_others": 0.3719403813508531,
+      "loss_prob_others": 0.06348
+    }
+  ]
+}

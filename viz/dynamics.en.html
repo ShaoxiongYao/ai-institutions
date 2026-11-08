@@ -1,0 +1,837 @@
+<title>AI Institutions Explorer</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Fonts load without blocking first paint; system fonts show until they arrive (or if Google is unreachable). -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;700&family=Source+Serif+4:opsz,wght@8..60,700&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;700&family=Source+Serif+4:opsz,wght@8..60,700&display=swap"></noscript>
+<style>
+/* Layout: switches on top; one economy below it (100 people | firms climbing);
+   a "what just changed" strip; then money flows; then 50 possible histories. */
+:root {
+  --bg: #f3f5f8; --panel: #ffffff; --ink: #151a22; --ink2: #4a5263; --muted: #6f7788;
+  --line: #dde1e8; --soft: #eef1f5; --focus: #2a78d6;
+  --pos: #2a78d6; --neg: #e34948; --mid: #d6d5d1;
+  --mtn: #e7ebf1; --mtn2: #d3d9e2; --tick: #d97a00;
+  --f-display: "Source Serif 4", Georgia, serif;
+  --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-data: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1216; --panel: #171b21; --ink: #eceef2; --ink2: #b3b9c5; --muted: #8a91a0;
+    --line: #2a2f38; --soft: #20252d; --focus: #3987e5;
+    --pos: #3987e5; --neg: #e66767; --mid: #474743;
+    --mtn: #1f252d; --mtn2: #2a313b; --tick: #f0a03c;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1216; --panel: #171b21; --ink: #eceef2; --ink2: #b3b9c5; --muted: #8a91a0;
+  --line: #2a2f38; --soft: #20252d; --focus: #3987e5;
+  --pos: #3987e5; --neg: #e66767; --mid: #474743;
+  --mtn: #1f252d; --mtn2: #2a313b; --tick: #f0a03c;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.6;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 28px 48px;
+}
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+.wrap { max-width: 1340px; margin: 0 auto; display: grid; gap: 22px; }
+.layout { display: grid; grid-template-columns: 272px minmax(0, 1fr); gap: 22px; align-items: start; }
+main { display: grid; gap: 22px; min-width: 0; }
+h1 { font-family: var(--f-display); font-weight: 700; font-size: clamp(24px, 3.4vw, 34px); line-height: 1.25; margin: 0 0 8px; text-wrap: balance; }
+h2 { font-size: 18px; font-weight: 700; margin: 0; text-wrap: balance; }
+h3 { font-size: 15px; font-weight: 700; margin: 0; }
+p { margin: 0; }
+.lead { color: var(--ink2); max-width: 70ch; }
+.num { font-family: var(--f-data); font-variant-numeric: tabular-nums; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; min-width: 0; }
+.sub { font-size: 13px; color: var(--muted); }
+
+/* Try-this steps */
+.steps { display: grid; gap: 6px; padding-top: 12px; border-top: 1px solid var(--line); }
+.steps button { font: inherit; font-size: 13px; line-height: 1.45; text-align: left; color: var(--ink); background: var(--soft); border: 1px solid transparent;
+  border-radius: 8px; padding: 7px 10px; cursor: pointer; }
+.steps button:hover { border-color: var(--ink2); }
+.steps b { font-family: var(--f-data); font-weight: 500; color: var(--muted); margin-right: 6px; }
+
+/* TL;DR */
+.tldr h2 { display: flex; align-items: baseline; gap: 10px; }
+.tldr h2 span { font-size: 13px; font-weight: 400; color: var(--muted); }
+.tldr ul { margin: 10px 0 8px; padding-left: 1.2em; display: grid; gap: 7px; max-width: 100ch; }
+.tldr li::marker { color: var(--muted); }
+.tldr .go { font: inherit; font-size: 12px; color: var(--ink2); background: var(--soft); border: 1px solid var(--line); border-radius: 999px;
+  padding: 0 9px; margin-left: 6px; cursor: pointer; white-space: nowrap; vertical-align: 1px; }
+.tldr .go:hover { border-color: var(--ink2); color: var(--ink); }
+
+/* Switch board */
+.board { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 16px); display: grid; gap: 14px;
+  max-height: calc(100vh - 32px - env(safe-area-inset-top, 0px)); overflow-y: auto; }
+.switches { display: grid; gap: 12px; }
+.board .sw { flex-direction: column; align-items: flex-start; gap: 5px; }
+.board .sw .opts { flex-wrap: wrap; }
+.sw { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--ink2); }
+.sw .opts { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; padding: 3px; gap: 2px; background: var(--soft); }
+.sw input { position: absolute; opacity: 0; pointer-events: none; }
+.sw label.opt { padding: 4px 14px; border-radius: 999px; cursor: pointer; color: var(--ink2); white-space: nowrap; transition: background .2s, color .2s; }
+.sw input:checked + label.opt { background: var(--ink); color: var(--panel); }
+/* Many-option switch: one option per row, parameter hint on the right */
+.sw.stack .opts { display: grid; grid-template-columns: 1fr; align-self: stretch; border-radius: 10px; }
+.sw.stack label.opt { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; border-radius: 7px; padding: 4px 10px; }
+.sw .hint { font-family: var(--f-data); font-size: 11px; color: var(--muted); }
+.swnote { font-size: 12px; line-height: 1.45; color: var(--muted); }
+.swnote:empty { display: none; }
+.sw.dim .opts { opacity: 0.55; }
+.climber.lab circle { fill: var(--panel); stroke: var(--ink); stroke-width: 2.4; }
+.climber.lab text { fill: var(--ink); }
+.sw input:checked + label.opt .hint { color: var(--panel); opacity: 0.7; }
+.sw input:focus-visible + label.opt, button:focus-visible, select:focus-visible, input[type=range]:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.sw.small { font-size: 13px; }
+.sw.small label.opt { padding: 2px 10px; }
+.timeline { display: grid; gap: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+.tl-main { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; min-width: 0; }
+.tl-main #t { flex: 1 1 100%; order: 3; }
+#play { font: inherit; font-weight: 500; color: var(--panel); background: var(--ink); border: 0; border-radius: 999px; padding: 6px 16px; cursor: pointer; white-space: nowrap; min-width: 84px; }
+#t { flex: 1; min-width: 0; accent-color: var(--ink); }
+#tlabel { white-space: nowrap; font-size: 14px; color: var(--ink2); }
+select { font: inherit; font-size: 13px; color: var(--ink); background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 2px 6px; }
+
+/* Institution title */
+.inst { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; }
+#inst-name { font-family: var(--f-display); font-size: 26px; font-weight: 700; }
+#inst-desc { color: var(--ink2); }
+
+/* Stage */
+.stage { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 16px; }
+.people-group { display: grid; gap: 4px; padding: 10px 0; border-top: 1px solid var(--line); }
+.people-group:first-of-type { border-top: 0; padding-top: 4px; }
+.pg-head { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+.pg-name { font-weight: 700; }
+.pg-name span { font-weight: 400; color: var(--muted); font-size: 13px; margin-left: 6px; }
+.pg-val { font-size: 14px; white-space: nowrap; }
+.pg-val .arrow { font-size: 11px; margin-right: 4px; }
+.people { width: 100%; max-width: 300px; height: auto; display: block; }
+.pbase { fill: var(--mid); opacity: .5; }
+.plevel { transform-box: fill-box; transform-origin: 50% 100%; transition: transform .5s ease, fill .3s; }
+.scale { font-size: 12px; color: var(--muted); margin-top: 6px; }
+.scale i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; vertical-align: -1px; margin: 0 4px 0 8px; }
+.hurt { font-size: 14px; margin-top: 2px; }
+.hurt b { font-family: var(--f-data); font-size: 20px; font-weight: 500; }
+
+.mountain { width: 100%; height: auto; display: block; }
+.mountain text { font-family: var(--f-data); font-size: 11px; fill: var(--muted); }
+.climber { transition: transform .55s ease; }
+.climber text { font-family: var(--f-data); font-size: 11px; font-weight: 500; fill: var(--panel); }
+.climber.out circle { fill: var(--muted); opacity: .55; }
+.hline { transition: transform .55s ease; }
+.mstats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 0; padding-top: 10px; border-top: 1px solid var(--line); }
+.mstats dt { font-size: 12px; color: var(--muted); }
+.mstats dd { margin: 0; font-family: var(--f-data); font-size: 17px; font-variant-numeric: tabular-nums; }
+#shares { font-size: 12.5px; color: var(--ink2); margin-top: 8px; }
+
+/* Overview */
+.ov-head { display: grid; gap: 4px; margin-bottom: 12px; }
+#ov-headline { font-size: 14.5px; color: var(--ink2); max-width: 90ch; }
+#ov-headline b { color: var(--ink); }
+.ov-grid { display: grid; grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr); gap: 10px 12px; align-items: stretch; }
+.ov-col { font-size: 13px; color: var(--muted); text-align: center; letter-spacing: .02em; align-self: end; }
+.ov-side { font-size: 13px; color: var(--muted); writing-mode: vertical-rl; text-align: center; letter-spacing: .02em; align-self: center; }
+.ov-card { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; display: grid; gap: 5px; cursor: pointer; background: var(--panel); min-width: 0; }
+.ov-card:hover { border-color: var(--ink2); }
+.ov-card.on { border: 2px solid var(--ink); padding: 9px 11px; }
+.ov-card h3 { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 2px 8px; }
+.ov-card h3 span { font-size: 12px; font-weight: 400; color: var(--muted); }
+.ov-m { display: grid; grid-template-columns: 7.6em minmax(0, 1fr) 6.4em; gap: 8px; align-items: center; font-size: 12.5px; }
+.ov-lab { color: var(--ink2); white-space: nowrap; }
+.ov-track { position: relative; height: 10px; background: var(--soft); border-radius: 3px; overflow: hidden; }
+.ov-bar { position: absolute; top: 0; bottom: 0; border-radius: 3px; transition: left .45s ease, width .45s ease, background-color .3s; }
+.ov-tick { position: absolute; top: 0; bottom: 0; width: 3px; border-radius: 1px; background: var(--tick); transition: left .45s ease; }
+.tick-key { display: inline-block; width: 3px; height: 11px; border-radius: 1px; background: var(--tick); vertical-align: -1px; }
+#inst-hist { font-size: 14px; color: var(--muted); }
+.ov-zero { position: absolute; top: -2px; bottom: -2px; width: 1px; background: var(--ink2); }
+.ov-val { text-align: right; white-space: nowrap; font-family: var(--f-data); font-variant-numeric: tabular-nums; }
+.ov-val i { font-style: normal; font-family: var(--f-body); font-size: 11px; color: var(--panel); background: var(--ink); border-radius: 4px; padding: 0 4px; margin-left: 4px; }
+.ov-worse { font-size: 12.5px; color: var(--ink2); }
+@media (max-width: 700px) {
+  .ov-grid { grid-template-columns: minmax(0, 1fr); }
+  .ov-col, .ov-side, .ov-blank { display: none; }
+  .ov-card { grid-row: auto !important; grid-column: auto !important; }
+}
+@media (prefers-reduced-motion: reduce) { .ov-bar, .ov-tick { transition: none; } }
+
+/* Change strip */
+#change { display: grid; gap: 10px; }
+#change .hint { color: var(--muted); }
+.cmp { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.cmp div { background: var(--soft); border-radius: 8px; padding: 8px 10px; min-width: 0; }
+.cmp dt { font-size: 12px; color: var(--muted); }
+.cmp dd { margin: 2px 0 0; font-family: var(--f-data); font-size: 14px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.cmp .up { color: var(--pos); } .cmp .down { color: var(--neg); }
+.cmp .same { color: var(--muted); }
+.tag { display: inline-block; font-size: 12px; padding: 1px 8px; border-radius: 999px; background: var(--ink); color: var(--panel); margin-left: 6px; }
+
+/* Sankey */
+.flowwrap { overflow-x: auto; }
+.flow { width: 100%; min-width: 640px; height: auto; display: block; }
+.flow text { font-size: 12px; fill: var(--ink2); }
+.flow text.v { font-family: var(--f-data); fill: var(--muted); font-size: 11px; }
+.flow text.mid { font-weight: 700; fill: var(--ink); paint-order: stroke; stroke: var(--panel); stroke-width: 4px; stroke-linejoin: round; }
+.flow .band { transition: opacity .2s; }
+.flow .dots { fill: none; stroke: var(--panel); stroke-linecap: round; stroke-dasharray: 0.1 14; animation: flow 1.4s linear infinite; opacity: .9; }
+@keyframes flow { to { stroke-dashoffset: -14.1; } }
+
+/* Fan */
+.fan-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; align-items: center; }
+.fans { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-top: 12px; }
+.fan { position: relative; border: 1px solid var(--line); border-radius: 10px; padding: 10px 10px 4px; cursor: pointer; background: var(--panel); min-width: 0; }
+.fan.on { border: 2px solid var(--ink); padding: 9px 9px 3px; }
+.fan h3 { font-size: 14px; }
+.fan svg { width: 100%; height: auto; display: block; touch-action: none; }
+.fan svg text { font-family: var(--f-data); font-size: 10px; fill: var(--muted); }
+.tip { position: absolute; pointer-events: none; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 6px 9px; font-size: 12px; box-shadow: 0 4px 16px rgb(0 0 0 / .12); z-index: 3; white-space: nowrap; }
+footer { font-size: 12.5px; color: var(--muted); max-width: 92ch; display: grid; gap: 6px; }
+footer code { font-family: var(--f-data); font-size: 12px; }
+footer a { color: var(--ink2); }
+
+@media (max-width: 1180px) { .stage { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 960px) {
+  .layout { grid-template-columns: minmax(0, 1fr); }
+  .board { position: static; max-height: none; overflow: visible; }
+  .fans { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 460px) { .fans { grid-template-columns: minmax(0, 1fr); } }
+@media (prefers-reduced-motion: reduce) {
+  .plevel, .climber, .hline, .sw label.opt { transition: none; }
+  .flow .dots { animation: none; display: none; }
+}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Flip a switch and see who gets the gains from AI</h1>
+    <p class="lead">A small economy: 100 people and four AI firms doing R&amp;D for 25 periods. The four institutions come from two choices: whether research results are open, and who pays for and owns the firms. Start with the overview to compare the four; then flip the assumptions on the left to see which conclusions change; then scroll down to watch how any one institution plays out.</p>
+  </header>
+
+  <section class="card tldr" aria-labelledby="tldr-title">
+    <h2 id="tldr-title">TL;DR<span>the findings in five sentences</span></h2>
+    <ul>
+      <li><b>Open research needs someone to pay for it.</b> With public funding, open research ties for the highest technology and gives the largest gains to workers and others (under the default assumptions).<button class="go" type="button" data-step="1">See it</button></li>
+      <li><b>Privately funded open research does not hold up.</b> When firms choose their own R&amp;D, open results are shared by everyone, so a firm gets little back from its own spending and hardly invests; when openness also erodes pricing power, firms lose money and exit.<button class="go" type="button" data-step="4">See it</button></li>
+      <li><b>Private closed research drifts toward monopoly.</b> When pricing depends on the lead, laggards exit and usually one firm is left; technology is even the highest, but the gains go mostly to investors and workers get the least.<button class="go" type="button" data-step="tldr-mono">See it</button></li>
+      <li><b>How large the open advantage is depends on how well open results can be used.</b> The default is the most favorable case: open results are absorbed in full, firms’ research paths are uncorrelated, and progress never gets harder, so open research always reaches about 10. Relaxing these assumptions with the “Frictions in technical progress” switch shrinks the advantage. Under public funding open research rarely does worse than closed; under private funding it can.<button class="go" type="button" data-step="5">See it</button></li>
+      <li><b>A public lab need not crowd out private R&amp;D.</b> When private firms are closed, an open public lab makes them invest more; when private firms are open too, it replaces their R&amp;D entirely. Its results are mostly monetized by private owners.<button class="go" type="button" data-step="6">See it</button></li>
+    </ul>
+    <p class="sub">An illustrative model with uncalibrated parameters, not a forecast. Details: <code>docs/findings.md</code>, F8–F11 (in Chinese).</p>
+  </section>
+
+  <div class="layout">
+  <aside class="card board" aria-label="Institution switches and time">
+    <div class="switches" id="switches"></div>
+    <div class="timeline">
+      <div class="tl-main">
+        <button id="play" type="button">▶ Play</button>
+        <span id="tlabel"></span>
+        <input id="t" type="range" min="0" max="24" step="1" value="24" aria-label="Period">
+      </div>
+      <div class="sw small" id="sample-sw"></div>
+      <label class="sw small" for="speed">Speed
+        <select id="speed"><option value="0.5">Slow</option><option value="1" selected>Medium</option><option value="2">Fast</option></select>
+      </label>
+    </div>
+    <div class="steps" id="steps"></div>
+  </aside>
+
+  <main>
+  <section class="card" aria-labelledby="ov-title">
+    <div class="ov-head">
+      <h2 id="ov-title">Overview: what each institution delivers</h2>
+      <p class="sub" id="ov-sub"></p>
+      <p id="ov-headline" aria-live="polite"></p>
+    </div>
+    <div class="ov-grid" id="ov-grid"></div>
+  </section>
+
+  <section class="inst" aria-live="polite">
+    <span id="inst-name"></span><span id="inst-hist"></span><span id="inst-desc"></span>
+  </section>
+
+  <section class="stage">
+    <div class="card">
+      <h2>100 people: better or worse off than without AI?</h2>
+      <p class="sub" style="margin:2px 0 6px">Each figure is filled to show the income gained (blue) or lost (red) in total from period 1 to now, measured in periods of original income. The fill builds up as the animation plays. Everyone within a group is identical in the model.</p>
+      <div class="hurt" id="hurt"></div>
+      <div id="people"></div>
+      <p class="scale" id="scale-note"></p>
+    </div>
+    <div class="card">
+      <h2>Technology: four firms climbing one mountain</h2>
+      <p class="sub" style="margin:2px 0 6px">Height is the capability a firm can offer users. When results are open, every firm can use the public technology below the dashed line. A firm that loses all its starting capital falls to the base (exits).</p>
+      <svg class="mountain" id="mountain" viewBox="0 0 420 290" role="img" aria-label="Capability of the four firms"></svg>
+      <p id="shares"></p>
+      <dl class="mstats">
+        <div><dt>Firms alive</dt><dd id="m-n"></dd></div>
+        <div><dt>Capability users get</dt><dd id="m-used"></dd></div>
+        <div><dt>Top capability</dt><dd id="m-top"></dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <section class="card" id="change" aria-live="polite"></section>
+
+  <section class="card">
+    <h2>Where the money comes from and where it goes</h2>
+    <p class="sub" style="margin:2px 0 10px" id="flow-sub"></p>
+    <div class="flowwrap"><svg class="flow" id="flow" viewBox="0 0 860 364" role="img" aria-label="Money flows"></svg></div>
+  </section>
+
+  <section class="card">
+    <div class="fan-head">
+      <div>
+        <h2>How much luck matters: 50 possible histories</h2>
+        <p class="sub">Each thin line is the outcome under one draw of luck; the thick line is the average over 4,000 histories. The wider the lines spread, the less predictable the outcome. Click a small chart to switch to that institution.</p>
+      </div>
+      <div class="sw small" id="metric-sw"></div>
+    </div>
+    <div class="fans" id="fans"></div>
+  </section>
+
+  <footer id="footer"></footer>
+  </main>
+  </div>
+</div>
+
+<script type="application/json" id="data">__DATA__</script>
+<script>
+(() => {
+  const D = JSON.parse(document.getElementById('data').textContent);
+  // Identical institution blocks are stored once in D.blocks; resolve the indices.
+  for (const sc of Object.values(D.scenarios)) for (const k in sc) sc[k] = D.blocks[sc[k]];
+  const LAB_NAME = { closed: 'closed public lab', open: 'open public lab' };
+  const LAB_A = { closed: 'a closed public lab', open: 'an open public lab' };
+  for (const b of D.blocks)
+    b.label = `${b.public ? 'Public' : 'Private'} ${b.open ? 'open' : 'closed'}` + (b.lab && b.lab !== 'none' ? ` + ${LAB_NAME[b.lab]}` : '');
+  const T = D.T, M = D.M, G = D.groups.length;
+  const ETA_KEYS = D.etas.map(String);
+  const PRICING_KEYS = D.pricings;
+  const SC = (s) => D.scenarios[`${s.pricing}|${s.eta}|${s.inv}|${s.fric}|${s.lab}`];
+  const ALL_SC = Object.values(D.scenarios);
+  const KEYS = ['closed_private', 'open_private', 'closed_public', 'open_public'];
+  const GROUP = ['Investors', 'Workers', 'Others'];
+  const COUNT = D.n.map((x) => Math.round(100 * x));
+  const Y0 = D.y0;
+  const FIRMS = ['A', 'B', 'C', 'D'];
+  const DESC = {
+    closed_private: 'Investors fund and own the firms; results stay private; a firm that loses all its starting capital exits.',
+    open_private: 'Investors fund and own the firms; results are public and other firms can reuse them; a firm that loses all its starting capital exits.',
+    closed_public: 'Taxes fund the firms and the public owns them; results stay private; firms never exit.',
+    open_public: 'Taxes fund the firms and the public owns them; results are public and other firms can reuse them.',
+  };
+  const FRIC = [
+    { value: 'none', label: 'Ideal', hint: 'no friction', why: 'Back to ideal technology (no friction)', desc: '' },
+    { value: 'absorb', label: 'Hard to absorb', hint: 'ψ = 0.5', why: 'Firms absorb only half of open results', desc: ' Open results are usable by everyone in the current period, but firms absorb only half of them into further R&D.' },
+    { value: 'herd', label: 'Herding', hint: 'ρ = 0.6', why: 'Open research paths converge', desc: ' With open results, firms’ research paths converge (the correlation of R&D luck rises from 0.2 to 0.6).' },
+    { value: 'hard', label: 'Harder progress', hint: 'φ = 0.5', why: 'Progress gets harder', desc: ' The higher the capability, the harder further progress becomes (this affects every institution).' },
+    { value: 'all', label: 'All three', hint: 'all', why: 'Add all three frictions', desc: ' Hard absorption, herding and rising difficulty all apply at once.' },
+  ];
+  const FRIC_OF = Object.fromEntries(FRIC.map((f) => [f.value, f]));
+  const state = { open: false, pub: false, eta: ETA_KEYS[0], pricing: 'fixed', inv: 'budget', fric: 'none', lab: 'none', sample: 0, t: T - 1, metric: 'used', speed: 1, playing: false };
+  let prev = null;  // {open, pub, eta, why}
+  const $ = (id) => document.getElementById(id);
+  const keyOf = (s) => `${s.open ? 'open' : 'closed'}_${s.pub ? 'public' : 'private'}`;
+  const inst = (s = state) => SC(s)[keyOf(s)];
+  const smp = (s = state) => inst(s).samples[state.sample];
+  const fmt = (v, d = 2) => (Math.abs(v) < 0.5 * Math.pow(10, -d) ? 0 : v).toFixed(d);
+  const NS = 'http://www.w3.org/2000/svg';
+  const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+
+  // ---------- switches ----------
+  function sw(el, name, label, options, get, set) {
+    el.innerHTML = (label ? `<span>${label}</span>` : '') + `<span class="opts" role="radiogroup" aria-label="${label || name}">` +
+      options.map((o, i) => `<input type="radio" id="${name}-${i}" name="${name}" value="${i}"><label class="opt" for="${name}-${i}">${o.label}${o.hint ? `<span class="hint">${o.hint}</span>` : ''}</label>`).join('') + '</span>';
+    el.addEventListener('change', (e) => set(options[+e.target.value].value));
+    el.sync = () => options.forEach((o, i) => { $(`${name}-${i}`).checked = String(o.value) === String(get()); });
+    el.sync();
+    return el;
+  }
+  const swBox = $('switches');
+  const mk = () => { const d = document.createElement('div'); d.className = 'sw'; swBox.appendChild(d); return d; };
+  const controls = [
+    sw(mk(), 'open', 'Research results', [{ value: false, label: 'Closed' }, { value: true, label: 'Open' }], () => state.open,
+      (v) => change({ open: v }, v ? 'Made research results open' : 'Made research results closed')),
+    sw(mk(), 'pub', 'Who pays and owns', [{ value: false, label: 'Investors' }, { value: true, label: 'Public (taxes)' }], () => state.pub,
+      (v) => change({ pub: v }, v ? 'Switched to tax funding and public ownership' : 'Switched to investor funding and ownership')),
+    (() => {
+      const el = mk();
+      const c = sw(el, 'lab', 'Turn firm D into a public lab', [{ value: 'none', label: 'No' }, { value: 'closed', label: 'Closed' }, { value: 'open', label: 'Open' }],
+        () => state.lab, (v) => change({ lab: v }, v === 'none' ? 'Firm D back to a private firm' : `Firm D became ${LAB_A[v]}`));
+      el.insertAdjacentHTML('beforeend', '<small class="swnote" id="lab-note"></small>');
+      const sync = c.sync;
+      c.sync = () => {
+        sync();
+        el.classList.toggle('dim', state.pub);
+        $('lab-note').textContent = state.pub
+          ? 'Funding is public now, so all four firms are public already; this switch only affects the two private institutions in the overview.'
+          : state.lab !== 'none' ? 'Tax-funded, publicly owned, never exits; its budget equals the other firms’ policy share.' : '';
+      };
+      return c;
+    })(),
+    sw(mk(), 'eta', 'AI replaces labor income', ETA_KEYS.map((k) => ({ value: k, label: +k === 0 ? 'No' : `Yes (η = ${k})` })), () => state.eta,
+      (v) => change({ eta: v }, +v === 0 ? 'Turned labor-income replacement off' : 'Turned labor-income replacement on')),
+    sw(mk(), 'pricing', 'Firm pricing', [{ value: 'fixed', label: 'Fixed half' }, { value: 'lead', label: 'By lead' }], () => state.pricing,
+      (v) => change({ pricing: v }, v === 'lead' ? 'Pricing now depends on the lead' : 'Pricing now a fixed half')),
+    sw(mk(), 'inv', 'Private firms’ R&D spending', [{ value: 'budget', label: 'Policy budget' }, { value: 'firms', label: 'Firms decide' }], () => state.inv,
+      (v) => change({ inv: v }, v === 'firms' ? 'Private firms now choose their R&D' : 'Private firms now spend the policy budget')),
+    (() => { const el = mk(); el.classList.add('stack'); return sw(el, 'fric', 'Frictions in technical progress', FRIC, () => state.fric, (v) => change({ fric: v }, FRIC_OF[v].why)); })(),
+    sw($('sample-sw'), 'sample', 'Luck', [0, 1, 2].map((i) => ({ value: i, label: `History ${i + 1}` })), () => state.sample,
+      (v) => { state.sample = +v; renderAll(); }),
+    sw($('metric-sw'), 'metric', '', [{ value: 'used', label: 'Capability users get' }, { value: 'g1', label: 'Workers' }, { value: 'g0', label: 'Investors' }, { value: 'g2', label: 'Others' }],
+      () => state.metric, (v) => { state.metric = v; renderFans(); updateT(); }),
+  ];
+  function change(patch, why) {
+    prev = { open: state.open, pub: state.pub, eta: state.eta, pricing: state.pricing, inv: state.inv, fric: state.fric, lab: state.lab, why };
+    Object.assign(state, patch);
+    renderAll();
+  }
+
+  const STEPS = [
+    { label: 'Start from private closed and make results open', from: { open: false, pub: false, eta: ETA_KEYS[0], pricing: 'fixed', inv: 'budget', fric: 'none', lab: 'none' }, to: { open: true }, why: 'Made research results open' },
+    { label: 'Then switch funding and ownership to the public', from: { open: true, pub: false, eta: ETA_KEYS[0], pricing: 'fixed', inv: 'budget', fric: 'none', lab: 'none' }, to: { pub: true }, why: 'Switched to tax funding and public ownership' },
+    { label: 'Back to private closed, turn on labor-income replacement', from: { open: false, pub: false, eta: ETA_KEYS[0], pricing: 'fixed', inv: 'budget', fric: 'none', lab: 'none' }, to: { eta: ETA_KEYS[ETA_KEYS.length - 1] }, why: 'Turned labor-income replacement on' },
+    { label: 'Under private open, make pricing depend on the lead', from: { open: true, pub: false, eta: ETA_KEYS[0], pricing: 'fixed', inv: 'budget', fric: 'none', lab: 'none' }, to: { pricing: 'lead' }, why: 'Pricing now depends on the lead' },
+    { label: 'Under private open, let firms choose their R&D', from: { open: true, pub: false, eta: ETA_KEYS[0], pricing: 'fixed', inv: 'budget', fric: 'none', lab: 'none' }, to: { inv: 'firms' }, why: 'Private firms now choose their R&D' },
+    { label: 'Under public open, add all three frictions', from: { open: true, pub: true, eta: ETA_KEYS[0], pricing: 'fixed', inv: 'budget', fric: 'none', lab: 'none' }, to: { fric: 'all' }, why: 'Add all three frictions' },
+    { label: 'Private closed, firms choosing R&D: turn firm D into an open public lab', from: { open: false, pub: false, eta: ETA_KEYS[0], pricing: 'lead', inv: 'firms', fric: 'none', lab: 'none' }, to: { lab: 'open' }, why: 'Firm D became an open public lab' },
+  ];
+  $('steps').innerHTML = '<span class="sub" style="align-self:center">Try this:</span>' +
+    STEPS.map((s, i) => `<button type="button" data-i="${i}"><b>${i + 1}</b>${s.label}</button>`).join('');
+  // TL;DR buttons reuse the try-this steps; the monopoly one has no step of its own.
+  const EXTRA_STEPS = { 'tldr-mono': { label: '', from: { open: false, pub: false, eta: ETA_KEYS[0], pricing: 'fixed', inv: 'budget', fric: 'none', lab: 'none' }, to: { pricing: 'lead' }, why: 'Pricing now depends on the lead' } };
+  const runStep = (s) => {
+    Object.assign(state, s.from);
+    prev = { ...s.from, why: s.why };
+    Object.assign(state, s.to);
+    stop(); state.t = 0; renderAll(); play();
+  };
+  $('steps').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) runStep(STEPS[+b.dataset.i]); });
+  document.querySelectorAll('.tldr [data-step]').forEach((b) => b.addEventListener('click', () => {
+    runStep(EXTRA_STEPS[b.dataset.step] || STEPS[+b.dataset.step]);
+    document.querySelector('.inst').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+  }));
+
+  // ---------- people ----------
+  const CELL_W = 30, CELL_H = 36, COLS = 10;
+  const peopleEl = $('people');
+  peopleEl.innerHTML = GROUP.map((g, gi) => {
+    const rows = Math.ceil(COUNT[gi] / COLS);
+    const shape = '<circle cx="15" cy="8" r="5.5"/><path d="M6,32 Q6,16 15,16 Q24,16 24,32 Z"/>';
+    let glyphs = `<defs><clipPath id="pc-${gi}">${shape}</clipPath></defs>`;
+    for (let i = 0; i < COUNT[gi]; i++) {
+      const x = (i % COLS) * CELL_W, y = Math.floor(i / COLS) * CELL_H;
+      glyphs += `<g transform="translate(${x},${y})"><g class="pbase">${shape}</g>` +
+        `<g clip-path="url(#pc-${gi})"><rect class="plevel" x="5" y="2" width="20" height="30.5"/></g></g>`;
+    }
+    return `<div class="people-group"><div class="pg-head"><span class="pg-name">${g}<span>${COUNT[gi]} people · income per period without AI: ${Y0[gi]}</span></span><span class="pg-val num" id="pv-${gi}"></span></div>
+      <svg class="people" id="pg-${gi}" viewBox="0 0 ${COLS * CELL_W} ${rows * CELL_H}" role="img" aria-label="${g}">${glyphs}</svg></div>`;
+  }).join('');
+
+  // Cumulative gain in units of "periods of original income": cum_gain / y0.
+  const cumPeriods = (s, g, t) => s.cum_gain[t][g] / Y0[g];
+  let SCALE = [1, 1, 1];  // per group: full level = largest |cumPeriods| over all institutions, eta, t
+  function computeScale() {
+    SCALE = [0, 1, 2].map((g) => {
+      let mx = 0;
+      for (const sc of ALL_SC) for (const k of KEYS) for (const row of sc[k].samples[state.sample].cum_gain)
+        mx = Math.max(mx, Math.abs(row[g] / Y0[g]));
+      return mx || 1;
+    });
+    $('scale-note').innerHTML = `<i style="background:var(--pos)"></i>gained<i style="background:var(--neg)"></i>lost · full figure: ` +
+      GROUP.map((g, i) => `${g} ${fmt(SCALE[i], 0)} periods of income`).join(', ') + ' (each group has its own scale: its largest value across all institutions)';
+  }
+  function updatePeople() {
+    const s = smp(), t = state.t;
+    let hurt = 0;
+    for (let g = 0; g < G; g++) {
+      const c = cumPeriods(s, g, t);
+      if (c < -0.005) hurt += COUNT[g];
+      const level = Math.min(1, Math.abs(c) / SCALE[g]);
+      const fill = c >= 0 ? 'var(--pos)' : 'var(--neg)';
+      $(`pg-${g}`).querySelectorAll('.plevel').forEach((el) => { el.style.transform = `scaleY(${level.toFixed(3)})`; el.style.fill = fill; });
+      const arrow = c > 0.005 ? '▲' : c < -0.005 ? '▼' : '■';
+      $(`pv-${g}`).innerHTML = `<span class="arrow" style="color:${c > 0.005 ? 'var(--pos)' : c < -0.005 ? 'var(--neg)' : 'var(--muted)'}">${arrow}</span>${c >= 0 ? 'gained' : 'lost'} ${fmt(Math.abs(c), 1)} periods of income`;
+    }
+    $('hurt').innerHTML = `Worse off than without AI: <b>${hurt}</b> of 100 people`;
+  }
+
+  // ---------- mountain ----------
+  const MT = { x0: 46, y0: 252, x1: 330, y1: 28 };
+  let QMAX = 1;
+  function computeQmax() {
+    let mx = 0;
+    for (const sc of ALL_SC) for (const k of KEYS) for (const row of sc[k].samples[state.sample].q_eff) for (const q of row) mx = Math.max(mx, q);
+    const step = mx > 8 ? 2 : 1;
+    QMAX = Math.ceil(mx / step) * step;
+  }
+  const yOf = (q) => MT.y0 - (q / QMAX) * (MT.y0 - MT.y1);
+  const xOnSlope = (q) => MT.x0 + (q / QMAX) * (MT.x1 - MT.x0);
+  function drawMountain() {
+    const svg = $('mountain');
+    let g = '';
+    const step = QMAX > 8 ? 2 : 1;
+    for (let v = 0; v <= QMAX + 1e-9; v += step) {
+      const y = yOf(v).toFixed(1);
+      g += `<line x1="34" x2="410" y1="${y}" y2="${y}" stroke="var(--line)" stroke-width="0.6"/><text x="28" y="${+y + 3.5}" text-anchor="end">${v}</text>`;
+    }
+    g += `<polygon points="${MT.x0 - 30},${MT.y0 + 8} ${MT.x0},${MT.y0} ${MT.x1},${MT.y1 - 6} ${MT.x1 + 34},${MT.y1 + 40} 412,${MT.y0 - 60} 412,${MT.y0 + 8}" fill="var(--mtn)"/>`;
+    g += `<polygon points="${MT.x0},${MT.y0} ${MT.x1},${MT.y1 - 6} ${MT.x1 + 34},${MT.y1 + 40} ${MT.x1 + 10},${MT.y0 + 8} ${MT.x0 - 10},${MT.y0 + 8}" fill="var(--mtn2)" opacity="0.55"/>`;
+    g += `<line x1="${MT.x0 - 30}" x2="412" y1="${MT.y0 + 8}" y2="${MT.y0 + 8}" stroke="var(--ink2)" stroke-width="1"/>`;
+    g += `<text x="12" y="16" text-anchor="start">Capability</text>`;
+    g += `<g class="hline" id="hline"><line x1="34" x2="410" y1="0" y2="0" stroke="var(--ink)" stroke-width="1.6" stroke-dasharray="6 4"/><text x="408" y="-6" text-anchor="end" style="fill:var(--ink2)">Public technology</text></g>`;
+    g += FIRMS.map((f, j) => `<g class="climber" id="cl-${j}"><circle r="10" fill="var(--ink)" stroke="var(--panel)" stroke-width="2"/><text text-anchor="middle" dy="4">${f}</text></g>`).join('');
+    g += `<text x="${MT.x0 - 26}" y="${MT.y0 + 24}" text-anchor="start">Base: exited</text>`;
+    g += `<text id="nofirm" x="210" y="130" text-anchor="middle" style="font-family:var(--f-body);font-size:13px;fill:var(--ink)">All firms exited: users rely on public technology</text>`;
+    svg.innerHTML = g;
+  }
+  function updateMountain() {
+    const s = smp(), t = state.t;
+    const pos = [];
+    let outIdx = 0;
+    for (let j = 0; j < M; j++) {
+      const act = s.active[t][j], q = s.q_eff[t][j];
+      if (act) pos.push({ j, x: xOnSlope(q), y: yOf(q) });
+      else pos.push({ j, x: 150 + 26 * outIdx++, y: MT.y0 + 20, out: true });
+    }
+    const on = pos.filter((p) => !p.out).sort((a, b) => a.y - b.y);
+    // Spread climbers that stand at (nearly) the same height side by side.
+    const clusters = [];
+    for (const p of on) {
+      const c = clusters[clusters.length - 1];
+      if (c && Math.abs(c[0].y - p.y) < 14) c.push(p); else clusters.push([p]);
+    }
+    for (const c of clusters) { const x0 = c[0].x, y0 = c[0].y; c.forEach((p, i) => { p.x = x0 + (i - (c.length - 1) / 2) * 26; p.y = y0; }); }
+    for (const p of pos) {
+      const el = $(`cl-${p.j}`);
+      el.style.transform = `translate(${p.x.toFixed(1)}px, ${(p.y - 11).toFixed(1)}px)`;
+      el.classList.toggle('out', !!p.out);
+    }
+    const labOn = !state.pub && state.lab !== 'none';
+    $(`cl-${M - 1}`).classList.toggle('lab', labOn);
+    const hl = $('hline');
+    hl.style.display = state.open || (labOn && state.lab === 'open') ? '' : 'none';
+    hl.style.transform = `translateY(${yOf(s.H[t]).toFixed(1)}px)`;
+    $('shares').textContent = 'Market share: ' + FIRMS.map((f, j) => `${f}${labOn && j === M - 1 ? ' (public lab)' : ''} ${s.active[t][j] ? Math.round(100 * s.m[t][j]) + '%' : 'exited'}`).join(' · ');
+    $('m-n').textContent = `${s.n_active[t]} / ${M}`;
+    $('m-used').textContent = fmt(s.used[t]);
+    const alive = s.q_eff[t].filter((_, j) => s.active[t][j]);
+    $('m-top').textContent = alive.length ? fmt(Math.max(...alive)) : `${fmt(s.H[t])} (public)`;
+    $('nofirm').style.display = alive.length ? 'none' : '';
+  }
+
+  // ---------- change strip ----------
+  const label = (s) => SC(s)[keyOf(s)].label + (+s.eta ? ', labor income replaced' : '') + (s.pricing === 'lead' ? ', priced by lead' : '') + (s.inv === 'firms' && !s.pub ? ', firms set R&D' : '') + (s.fric !== 'none' ? `, friction: ${FRIC_OF[s.fric].label.toLowerCase()}` : '');
+  function metrics(s) {
+    const sm = SC(s)[keyOf(s)].samples[state.sample], t = state.t;
+    const rel = [0, 1, 2].map((g) => cumPeriods(sm, g, t));
+    return {
+      used: sm.used[t], n: sm.n_active[t],
+      hurt: rel.reduce((a, r, g) => a + (r < -0.005 ? COUNT[g] : 0), 0), rel,
+    };
+  }
+  function updateChange() {
+    const el = $('change');
+    if (!prev) {
+      el.innerHTML = '<h2>What just changed</h2><p class="hint">Flip any switch, or click a step under “Try this”, and this panel shows before and after side by side (same history, same period).</p>';
+      return;
+    }
+    const a = metrics(prev), b = metrics(state);
+    const cell = (name, va, vb, d, unit = '', better = 1) => {
+      const diff = vb - va, eps = 0.5 * Math.pow(10, -d);
+      const cls = Math.abs(diff) < eps ? 'same' : (diff * better > 0 ? 'up' : 'down');
+      const arrow = Math.abs(diff) < eps ? '=' : diff > 0 ? '▲' : '▼';
+      return `<div><dt>${name}</dt><dd>${typeof va === 'string' ? va : fmt(va, d) + unit} → ${typeof vb === 'string' ? vb : fmt(vb, d) + unit} <span class="${cls}">${arrow}</span></dd></div>`;
+    };
+    el.innerHTML = `<h2>What just changed<span class="tag">${prev.why}</span></h2>
+      <p class="sub">From “${label(prev)}” to “${label(state)}”, history ${state.sample + 1}, period ${state.t + 1}. ▲▼ mark values going up or down; blue is better, red is worse.</p>
+      <dl class="cmp">
+        ${cell('Capability users get', a.used, b.used, 2)}
+        ${cell('Firms alive', a.n, b.n, 0)}
+        ${cell('People worse off', a.hurt, b.hurt, 0, '', -1)}
+        ${[1, 0, 2].map((g) => cell(`${GROUP[g]}: total gain (periods of income)`, a.rel[g], b.rel[g], 1)).join('')}
+      </dl>`;
+  }
+
+  // ---------- sankey ----------
+  function updateFlow() {
+    const s = smp(), t = state.t, F = s.flows;
+    const v = (f) => [0, 1, 2].map((g) => F[f][t][g]);
+    const app = v('app'), cap = v('capital'), adj = v('adjust'), cost = v('cost');
+    // The labour-income transfer is one sum moving between groups: net it within each
+    // group, then show the net receivers (left) and net payers (right) joined by one arc.
+    const ell = [0, 1, 2].map((g) => F.t_in[t][g] - F.t_out[t][g]);
+    const tin = ell.map((x) => Math.max(0, x)), tout = ell.map((x) => Math.max(0, -x));
+    const net = [0, 1, 2].map((g) => app[g] + cap[g] + ell[g] - cost[g] - adj[g]);
+    const sur = net.map((x) => Math.max(0, x)), def = net.map((x) => Math.max(0, -x));
+    const sum = (a) => a.reduce((x, y) => x + y, 0);
+    const EPS = 1e-6;
+    const left = [
+      { id: 'tin', label: 'Labor income received', sub: 'net', vals: tin, c: 'var(--pos)' },
+      { label: 'User-side gains', sub: 'output from AI', vals: app, c: 'var(--pos)' },
+      { label: 'Firm profits', sub: 'to owners', vals: cap, c: 'var(--pos)' },
+      { label: 'Drawn from income', sub: 'below no-AI level', vals: def, c: 'var(--neg)' },
+    ].filter((n) => sum(n.vals) > EPS);
+    const right = [
+      { id: 'tout', label: 'Labor income replaced', sub: 'net', vals: tout, c: 'var(--neg)' },
+      { label: 'R&D cost', sub: '', vals: cost, c: 'var(--neg)' },
+      { label: 'Adjustment loss', sub: 'job moves, idle time', vals: adj, c: 'var(--neg)' },
+      { label: 'Net income gain', sub: 'above no-AI level', vals: sur, c: 'var(--pos)' },
+    ].filter((n) => sum(n.vals) > EPS);
+    const transfer = sum(tin);
+    const inG = [0, 1, 2].map((g) => left.reduce((a, n) => a + n.vals[g], 0));
+    const TOT = sum(inG);
+    const VBH = 364, X = { l: 190, m: 420, r: 650 }, NW = 12, GAP = 14, HGT = 300;
+    const TOP = transfer > EPS ? 52 : 30;
+    const k = TOT > 0 ? (HGT - GAP * (Math.max(left.length, right.length, 3) - 1)) / TOT : 0;
+    const stack = (sizes) => { let y = TOP; return sizes.map((h) => { const r = { y, h }; y += h + GAP; return r; }); };
+    const L = stack(left.map((n) => sum(n.vals) * k)), R = stack(right.map((n) => sum(n.vals) * k)), Mi = stack(inG.map((x) => x * k));
+    let g = '', dots = '';
+    const band = (x0, a0, b0, x1, a1, b1, c, op) => {
+      const xm = (x0 + x1) / 2;
+      g += `<path class="band" d="M${x0},${a0} C${xm},${a0} ${xm},${a1} ${x1},${a1} L${x1},${b1} C${xm},${b1} ${xm},${b0} ${x0},${b0} Z" fill="${c}" opacity="${op}"/>`;
+      const h = b0 - a0;
+      if (h > 2.5) dots += `<path class="dots" d="M${x0},${(a0 + b0) / 2} C${xm},${(a0 + b0) / 2} ${xm},${(a1 + b1) / 2} ${x1},${(a1 + b1) / 2}" stroke-width="${Math.min(4, h * 0.3).toFixed(1)}"/>`;
+    };
+    const midIn = Mi.map((m) => m.y), midOut = Mi.map((m) => m.y);
+    left.forEach((n, i) => {
+      let y = L[i].y;
+      for (let gi = 0; gi < 3; gi++) {
+        const h = n.vals[gi] * k; if (h < 0.05) continue;
+        band(X.l + NW, y, y + h, X.m, midIn[gi], midIn[gi] + h, n.c, 0.28);
+        y += h; midIn[gi] += h;
+      }
+    });
+    right.forEach((n, i) => {
+      let y = R[i].y;
+      for (let gi = 0; gi < 3; gi++) {
+        const h = n.vals[gi] * k; if (h < 0.05) continue;
+        band(X.m + NW, midOut[gi], midOut[gi] + h, X.r, y, y + h, n.c, 0.24);
+        y += h; midOut[gi] += h;
+      }
+    });
+    // Two-line labels beside each node, pushed apart so they never overlap.
+    const placeLabels = (rects) => {
+      const ys = rects.map((r) => r.y + r.h / 2);
+      for (let i = 1; i < ys.length; i++) ys[i] = Math.max(ys[i], ys[i - 1] + 30);
+      const over = ys.length ? ys[ys.length - 1] + 16 - VBH : 0;
+      if (over > 0) for (let i = ys.length - 1; i >= 0; i--) ys[i] = Math.min(ys[i] - over, i < ys.length - 1 ? ys[i + 1] - 30 : Infinity);
+      return ys;
+    };
+    const node = (x, r, c) => `<rect x="${x}" y="${r.y.toFixed(1)}" width="${NW}" height="${Math.max(1, r.h).toFixed(1)}" rx="2" fill="${c}"/>`;
+    const ly = placeLabels(L), ry = placeLabels(R);
+    left.forEach((n, i) => {
+      g += node(X.l, L[i], n.c);
+      g += `<text x="${X.l - 8}" y="${(ly[i] - 2).toFixed(1)}" text-anchor="end">${n.label}</text><text class="v" x="${X.l - 8}" y="${(ly[i] + 12).toFixed(1)}" text-anchor="end">${fmt(sum(n.vals), 1)}${n.sub ? ' · ' + n.sub : ''}</text>`;
+    });
+    right.forEach((n, i) => {
+      g += node(X.r, R[i], n.c);
+      g += `<text x="${X.r + NW + 8}" y="${(ry[i] - 2).toFixed(1)}">${n.label}</text><text class="v" x="${X.r + NW + 8}" y="${(ry[i] + 12).toFixed(1)}">${fmt(sum(n.vals), 1)}${n.sub ? ' · ' + n.sub : ''}</text>`;
+    });
+    Mi.forEach((r, gi) => {
+      g += node(X.m, r, 'var(--ink)');
+      g += `<text class="mid" x="${X.m + NW / 2}" y="${(r.y + r.h / 2 + 4).toFixed(1)}" text-anchor="middle">${GROUP[gi]}</text>`;
+    });
+    if (transfer > EPS) {
+      // The payers' outflow (right, top) is the receivers' inflow (left, top): one arc joins them.
+      const rx = X.r + NW / 2, lx = X.l + NW / 2, r0 = R[0].y, l0 = L[0].y;
+      const who = (vals) => [0, 1, 2].filter((gi) => vals[gi] > EPS).map((gi) => GROUP[gi].toLowerCase()).join(' and ');
+      g += `<defs><marker id="flow-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--ink2)"/></marker></defs>`;
+      g += `<path d="M${rx},${r0 - 3} C${rx},12 ${lx},12 ${lx},${l0 - 5}" fill="none" stroke="var(--ink2)" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#flow-arrow)"/>`;
+      g += `<text class="mid" x="${(lx + rx) / 2}" y="22" text-anchor="middle" style="font-weight:400;fill:var(--ink2)">One sum: ${fmt(transfer, 1)} of labor income moves from ${who(tout)} to ${who(tin)}</text>`;
+    }
+    $('flow').innerHTML = g + dots;
+    const S = sum(app) + sum(cap);
+    $('flow-sub').textContent = `“${label(state)}”, history ${state.sample + 1}: totals from period 1 to period ${t + 1} (per head of the whole economy). AI adds ${fmt(S, 1)} of new output: ${fmt(sum(app), 1)} on the user side and ${fmt(sum(cap), 1)} to firms. Wider bands mean more money; what each group receives (left) equals what it pays out plus the net income it keeps (right).`;
+  }
+
+  // ---------- fans ----------
+  const FW = 280, FH = 180, FL = 34, FR = 8, FT = 8, FB = 20;
+  const fx = (t) => FL + (t / (T - 1)) * (FW - FL - FR);
+  const fanGeom = {};
+  function fanSeries(k) {
+    const sc = SC(state)[k];
+    if (state.metric === 'used') return { paths: sc.fan.used, mean: sc.mean.used };
+    const g = +state.metric.slice(1);
+    return { paths: sc.fan.cum_gain.map((p) => p.map((r) => r[g])), mean: sc.mean.cum_gain.map((r) => r[g]) };
+  }
+  function nice(x) { const p = Math.pow(10, Math.floor(Math.log10(x))), f = x / p; return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10) * p; }
+  function renderFans() {
+    const all = KEYS.map(fanSeries);
+    let lo = Math.min(0, ...all.flatMap((s) => s.paths.flat())), hi = Math.max(...all.flatMap((s) => s.paths.flat()));
+    const step = nice((hi - lo) / 4 || 1);
+    lo = Math.floor(lo / step) * step; hi = Math.ceil(hi / step) * step;
+    const fy = (v) => FT + (1 - (v - lo) / (hi - lo)) * (FH - FT - FB);
+    $('fans').innerHTML = KEYS.map((k, i) => {
+      const { paths, mean } = all[i];
+      let g = '';
+      for (let v = lo; v <= hi + 1e-9; v += step) g += `<line x1="${FL}" x2="${FW - FR}" y1="${fy(v)}" y2="${fy(v)}" stroke="var(--line)" stroke-width="${Math.abs(v) < 1e-9 ? 1.2 : 0.6}"/><text x="${FL - 4}" y="${fy(v) + 3}" text-anchor="end">${+v.toFixed(2)}</text>`;
+      for (const t of [0, 9, 19, 24].filter((t) => t < T)) g += `<text x="${fx(t)}" y="${FH - 6}" text-anchor="middle">${t + 1}</text>`;
+      const pd = (arr) => arr.map((v, t) => `${t ? 'L' : 'M'}${fx(t).toFixed(1)},${fy(v).toFixed(1)}`).join('');
+      g += paths.map((p) => `<path d="${pd(p)}" fill="none" stroke="var(--ink)" stroke-width="1" opacity="0.13"/>`).join('');
+      g += `<path d="${pd(mean)}" fill="none" stroke="var(--ink)" stroke-width="2.4"/>`;
+      g += `<line class="fcur" x1="0" x2="0" y1="${FT}" y2="${FH - FB}" stroke="var(--ink2)" stroke-width="1"/><circle class="fdot" r="4" fill="var(--ink)" stroke="var(--panel)" stroke-width="2"/>`;
+      return `<div class="fan" data-k="${k}" role="button" tabindex="0" aria-label="Switch to ${SC(state)[k].label}"><h3>${SC(state)[k].label}</h3>
+        <svg viewBox="0 0 ${FW} ${FH}">${g}</svg><div class="tip" hidden></div></div>`;
+    }).join('');
+    KEYS.forEach((k, i) => { fanGeom[k] = { fy, ...all[i] }; });
+    $('fans').querySelectorAll('.fan').forEach((el) => {
+      const k = el.dataset.k, svg = el.querySelector('svg'), tip = el.querySelector('.tip');
+      const pick = () => {
+        const [o, p] = k.split('_');
+        if ((o === 'open') !== state.open || (p === 'public') !== state.pub)
+          change({ open: o === 'open', pub: p === 'public' }, 'Switched institution from the small charts');
+      };
+      el.addEventListener('click', pick);
+      el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); } });
+      svg.addEventListener('pointermove', (ev) => {
+        const r = svg.getBoundingClientRect();
+        const t = clamp(Math.round((((ev.clientX - r.left) / r.width) * FW - FL) / (FW - FL - FR) * (T - 1)), 0, T - 1);
+        const { paths, mean } = fanGeom[k];
+        const vals = paths.map((p) => p[t]).sort((a, b) => a - b);
+        const d = state.metric === 'used' ? 2 : 1;
+        tip.innerHTML = `Period ${t + 1} · mean <span class="num">${fmt(mean[t], d)}</span><br>Middle 80% of 50: <span class="num">${fmt(vals[5], d)} ~ ${fmt(vals[44], d)}</span>`;
+        tip.hidden = false;
+        const br = el.getBoundingClientRect();
+        const px = r.left - br.left + (fx(t) / FW) * r.width;
+        tip.style.left = `${clamp(px - tip.offsetWidth / 2, 2, br.width - tip.offsetWidth - 2)}px`;
+        tip.style.top = `${r.top - br.top - tip.offsetHeight - 4}px`;
+      });
+      svg.addEventListener('pointerleave', () => { tip.hidden = true; });
+    });
+  }
+  function updateFans() {
+    const cur = keyOf(state);
+    $('fans').querySelectorAll('.fan').forEach((el) => {
+      const k = el.dataset.k, { fy, mean } = fanGeom[k], x = fx(state.t);
+      el.classList.toggle('on', k === cur);
+      el.querySelectorAll('.fcur').forEach((l) => { l.setAttribute('x1', x); l.setAttribute('x2', x); });
+      const d = el.querySelector('.fdot'); d.setAttribute('cx', x); d.setAttribute('cy', fy(mean[state.t]));
+    });
+  }
+
+  // ---------- overview ----------
+  const OV = [
+    { id: 'tech', label: 'Technology', get: (m, t) => m.used[t], one: (s, t) => s.used[t], d: 1, best: 'max' },
+    { id: 'rd', label: 'Total R&D', get: (m, t) => m.R_cum[t], d: 1 },
+    { id: 'g1', label: 'Workers’ gain', get: (m, t) => m.cum_gain[t][1] / Y0[1], d: 1, best: 'max', gain: true },
+    { id: 'g2', label: 'Others’ gain', get: (m, t) => m.cum_gain[t][2] / Y0[2], d: 1, best: 'max', gain: true },
+    { id: 'g0', label: 'Investors’ gain', get: (m, t) => m.cum_gain[t][0] / Y0[0], d: 1, best: 'max', gain: true },
+  ];
+  // One ruler per metric across every scenario, institution and period.
+  const OV_RANGE = Object.fromEntries(OV.map((o) => {
+    let lo = 0, hi = 0;
+    for (const sc of ALL_SC) for (const k of KEYS) for (let t = 0; t < T; t++) {
+      const v = o.get(sc[k].mean, t); lo = Math.min(lo, v); hi = Math.max(hi, v);
+      if (o.one) for (const sm of sc[k].samples) { const w = o.one(sm, t); lo = Math.min(lo, w); hi = Math.max(hi, w); }
+    }
+    return [o.id, { lo, hi: hi || 1 }];
+  }));
+  const OV_POS = { closed_private: [1, 1], open_private: [1, 2], closed_public: [2, 1], open_public: [2, 2] };
+  (function buildOverview() {
+    const cards = KEYS.map((k) => {
+      const [r, c] = OV_POS[k];
+      return `<div class="ov-card" data-k="${k}" role="button" tabindex="0" style="grid-row:${r + 1};grid-column:${c + 1}">
+        <h3><b class="ov-name" style="font-weight:inherit"></b><span class="ov-alive"></span></h3>
+        ${OV.map((o) => `<div class="ov-m" data-m="${o.id}"><span class="ov-lab">${o.label}</span>
+          <div class="ov-track">${OV_RANGE[o.id].lo < 0 ? '<span class="ov-zero"></span>' : ''}<span class="ov-bar"></span>${o.one ? '<span class="ov-tick" aria-hidden="true"></span>' : ''}</div>
+          <span class="ov-val"></span></div>`).join('')}
+        <div class="ov-worse"></div></div>`;
+    }).join('');
+    $('ov-grid').innerHTML = `<div class="ov-blank" style="grid-row:1;grid-column:1"></div>
+      <div class="ov-col" style="grid-row:1;grid-column:2">Closed</div><div class="ov-col" style="grid-row:1;grid-column:3">Open</div>
+      <div class="ov-side" style="grid-row:2;grid-column:1">Investors fund and own</div><div class="ov-side" style="grid-row:3;grid-column:1">Taxes fund, public owns</div>${cards}`;
+    $('ov-grid').querySelectorAll('.ov-card').forEach((el) => {
+      const pick = () => {
+        const [o, p] = el.dataset.k.split('_');
+        if ((o === 'open') !== state.open || (p === 'public') !== state.pub) change({ open: o === 'open', pub: p === 'public' }, 'Switched institution from the overview');
+      };
+      el.addEventListener('click', pick);
+      el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); } });
+    });
+  })();
+  function updateOverview() {
+    const t = state.t, sc = SC(state);
+    const vals = Object.fromEntries(KEYS.map((k) => [k, Object.fromEntries(OV.map((o) => [o.id, o.get(sc[k].mean, t)]))]));
+    // All institutions tied for the top value (within rounding), so ties are never hidden.
+    const bestOf = (id) => {
+      const top = Math.max(...KEYS.map((k) => vals[k][id]));
+      return KEYS.filter((k) => Math.abs(vals[k][id] - top) <= 1e-6 * Math.max(1, Math.abs(top)));
+    };
+    const name = (k) => sc[k].label;
+    const names = (ks) => (ks.length === KEYS.length ? 'all four tie' : ks.map(name).join(', '));
+    $('ov-grid').querySelectorAll('.ov-card').forEach((el) => {
+      const k = el.dataset.k, m = sc[k].mean;
+      el.classList.toggle('on', k === keyOf(state));
+      el.querySelector('.ov-name').textContent = sc[k].label;
+      el.querySelector('.ov-alive').textContent = `firms alive ${fmt(m.n_active[t], 1)} / ${M}`;
+      for (const o of OV) {
+        const row = el.querySelector(`[data-m="${o.id}"]`), v = vals[k][o.id], { lo, hi } = OV_RANGE[o.id];
+        const span = hi - lo, zero = -lo / span, w = Math.abs(v) / span;
+        const bar = row.querySelector('.ov-bar');
+        bar.style.left = `${100 * (v < 0 ? zero - w : zero)}%`;
+        bar.style.width = `${100 * w}%`;
+        bar.style.background = o.gain ? (v < 0 ? 'var(--neg)' : 'var(--pos)') : (o.id === 'tech' ? 'var(--ink)' : 'var(--muted)');
+        const z = row.querySelector('.ov-zero'); if (z) z.style.left = `${100 * zero}%`;
+        if (o.one) row.querySelector('.ov-tick').style.left = `calc(${100 * (o.one(sc[k].samples[state.sample], t) - lo) / span}% - 1.5px)`;
+        const winners = bestOf(o.id);
+        const top = o.best && winners.includes(k) && winners.length < KEYS.length && Math.abs(v) > 1e-9;
+        row.querySelector('.ov-val').innerHTML = `${fmt(v, o.d)}${top ? '<i>best</i>' : ''}`;
+      }
+      const worse = Math.round(100 * m.loser_share[t]);
+      el.querySelector('.ov-worse').textContent = worse ? `On average ${worse} people worse off than without AI` : 'No one worse off than without AI';
+    });
+    const worseList = KEYS.filter((k) => sc[k].mean.loser_share[t] > 0.005).map(name);
+    $('ov-sub').innerHTML = `Period ${t + 1}, average of 4,000 simulations. Gains are in periods of original income (total extra income ÷ income per period without AI). Each metric uses one ruler across all cells and all assumptions. Click a cell to see how that institution plays out below.<br><i class="tick-key"></i> The tick marks the technology in the selected history ${state.sample + 1}, which is the one animated below; bars and numbers are averages.`;
+    $('ov-headline').innerHTML = `Under the current assumptions, highest technology: <b>${names(bestOf('tech'))}</b>; highest workers’ gain: <b>${names(bestOf('g1'))}</b>; highest investors’ gain: <b>${names(bestOf('g0'))}</b>; most R&amp;D: <b>${names(bestOf('rd'))}</b>. ` +
+      (worseList.length ? `Someone ends up worse off than without AI under: <b>${worseList.join(', ')}</b>.` : 'No one is worse off than without AI under any of the four.');
+  }
+
+  // ---------- footer ----------
+  $('footer').innerHTML = `
+    <p>This is an illustrative model with uncalibrated parameters, not a forecast. Each period the total R&amp;D budget is the same and is split evenly among surviving firms. Firm pricing has two settings: “Fixed half” (τ = 0.5; openness does not change pricing power), or “By lead” (the further a firm is ahead of users’ next-best option, the larger its share, between 10% and 70%; with every firm open only 10% is left). Once every firm has exited, users use the public technology for free. A privately funded firm exits when its cumulative losses exceed its starting capital of ${D.K0}. With “Private firms’ R&amp;D spending” set to “Firms decide”, each private firm chooses its spending every period to maximize “expected extra revenue × 5 − spending”, and can only spend the cash it has; publicly funded firms always spend the policy budget. With “AI replaces labor income” on, each period labor income equal to 30% of new output moves, mostly from workers to the owners of AI firms. With “Frictions in technical progress” set to “Ideal”, open firms always build on the best public result, their research paths are uncorrelated, and the pace of progress does not depend on capability; so as long as firms survive, every open outcome is the same (about 10). This is the upper bound of the open advantage. Each other option relaxes one assumption: firms absorb only half of the gap between the public result and their own (ψ = 0.5); the correlation of open firms’ R&amp;D luck rises from 0.2 to 0.6; each period’s progress is scaled by (1 + current capability)<sup>−0.5</sup>. “Turn firm D into a public lab” only affects the private institutions: firm D becomes tax-funded, publicly owned and never exits, with the same budget as the other firms’ policy share (0.075 per period), so the total budget is unchanged; the other three firms stay private. Experiment 8 (<code>experiments/mixed.py</code>, finding F11) uses “no lab at all” as the control to measure crowding in or out. All four institutions face the same random shocks.</p>
+    <p>Data: <code>results/dynamics/trajectories.json</code>, generated by <code>experiments/dynamics.py</code> (random seed ${D.run_info.seed}, ${D.run_info.n_draws} simulations, commit <code>${String(D.run_info.git_commit).slice(0, 7)}</code>). The model is described in <code>docs/model.md</code> §11–§15 and the findings in <code>docs/findings.md</code> (both in Chinese).</p>
+    <p>By Shaoxiong Yao · Code and data: <a href="https://github.com/ShaoxiongYao/ai-institutions">github.com/ShaoxiongYao/ai-institutions</a> · Code under Apache-2.0, text and figures under CC BY 4.0</p>`;
+
+  // ---------- time ----------
+  const tInput = $('t'); tInput.max = T - 1;
+  function updateT() {
+    tInput.value = state.t;
+    $('tlabel').innerHTML = `Period <b class="num">${state.t + 1}</b> / ${T}`;
+    updateOverview(); updatePeople(); updateMountain(); updateChange(); updateFlow(); updateFans();
+  }
+  tInput.addEventListener('input', () => { stop(); state.t = +tInput.value; updateT(); });
+  let timer = null;
+  const playBtn = $('play');
+  function stop() { state.playing = false; clearInterval(timer); timer = null; playBtn.textContent = '▶ Play'; }
+  function play() {
+    if (state.t >= T - 1) state.t = 0;
+    updateT();
+    state.playing = true; playBtn.textContent = '❚❚ Pause';
+    timer = setInterval(() => { if (state.t >= T - 1) stop(); else { state.t += 1; updateT(); } }, 700 / state.speed);
+  }
+  playBtn.addEventListener('click', () => (state.playing ? stop() : play()));
+  $('speed').addEventListener('change', (e) => { state.speed = +e.target.value; if (state.playing) { stop(); play(); } });
+
+  function renderAll() {
+    controls.forEach((c) => c.sync());
+    $('inst-name').textContent = inst().label;
+    $('inst-hist').textContent = `history ${state.sample + 1} (one simulation)`;
+    $('inst-desc').textContent = DESC[keyOf(state)] + (state.pricing === 'lead' ? ' A firm’s share depends on how far ahead it is.' : ' Firms keep a fixed half of the value they create.') + (+state.eta ? ' AI replaces part of labor income.' : '') + (!state.pub ? (state.inv === 'firms' ? ' Firms decide how much to spend each period (only from cash on hand).' : ' R&D spending follows the policy budget.') : '') + FRIC_OF[state.fric].desc +
+      (!state.pub && state.lab !== 'none' ? ` Firm D is ${LAB_A[state.lab]}: tax-funded, publicly owned, never exits; ${state.lab === 'open' ? 'its results are public, so private firms can build on them directly' : 'its results stay private'}.` : '');
+    computeQmax(); computeScale(); drawMountain(); renderFans(); updateT();
+  }
+  renderAll();
+})();
+</script>

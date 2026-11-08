@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use this work, please cite it as below."
+type: software
+title: "ai-institutions: How openness, ownership and financing of AI R&D shape innovation, distribution and risk"
+authors:
+  - family-names: Yao
+    given-names: Shaoxiong
+repository-code: "https://github.com/ShaoxiongYao/ai-institutions"
+license: Apache-2.0
+date-released: 2026-11-07
+keywords:
+  - artificial intelligence
+  - open source
+  - R&D
+  - institutions
+  - income distribution
+  - simulation
